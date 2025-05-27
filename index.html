@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Magic Wheel Pro</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #000;
+      font-family: 'Segoe UI', sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100vw;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      color: #F58220;
+      margin-bottom: 40px;
+      font-size: 32px;
+      opacity: 0;
+      transform: translateY(-20px);
+      animation: fadeIn 1s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .wheel-container {
+      position: relative;
+      width: 90vw;
+      max-width: 350px;
+      height: 90vw;
+      max-height: 350px;
+      margin-bottom: 40px;
+    }
+
+    .pointer {
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-top: 30px solid #F58220;
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0px #F58220; }
+      50% { box-shadow: 0 0 20px #F58220; }
+      100% { box-shadow: 0 0 0px #F58220; }
+    }
+
+    .wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 6px solid #fff;
+      position: relative;
+      background: conic-gradient(
+        #87B353 0deg 60deg,
+        #394E29 60deg 120deg,
+        #87B353 120deg 180deg,
+        #394E29 180deg 240deg,
+        #87B353 240deg 300deg,
+        #394E29 300deg 360deg
+      );
+      transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+    }
+
+    .segment-label {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      left: 50%;
+      top: 50%;
+      transform-origin: 0% 0%;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    .segment-label:nth-child(1) { transform: rotate(30deg) translate(0, -140px); }
+    .segment-label:nth-child(2) { transform: rotate(90deg) translate(0, -140px); }
+    .segment-label:nth-child(3) { transform: rotate(150deg) translate(0, -140px); }
+    .segment-label:nth-child(4) { transform: rotate(210deg) translate(0, -140px); }
+    .segment-label:nth-child(5) { transform: rotate(270deg) translate(0, -140px); }
+    .segment-label:nth-child(6) { transform: rotate(330deg) translate(0, -140px); }
+
+    .button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .button:disabled {
+      background-color: #666;
+      cursor: not-allowed;
+    }
+
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: #222;
+      color: #fff;
+      padding: 20px 30px;
+      border: 2px solid #F58220;
+      border-radius: 12px;
+      z-index: 10000;
+      text-align: center;
+      opacity: 0;
+      transition: all 0.5s ease;
+      max-width: 90%;
+    }
+
+    .popup.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Spin the Magic Wheel</h1>
+
+  <div class="wheel-container">
+    <div class="pointer"></div>
+    <div class="wheel" id="wheel">
+      <div class="segment-label">Q1</div>
+      <div class="segment-label">Q2</div>
+      <div class="segment-label">Q3</div>
+      <div class="segment-label">Q4</div>
+      <div class="segment-label">Q5</div>
+      <div class="segment-label">Q6</div>
+    </div>
+  </div>
+
+  <button class="button" id="spinBtn" onclick="spinWheel()">Spin the Wheel</button>
+  <button class="button" onclick="resetWheel()">Reset</button>
+  <div class="popup" id="popupBox"></div>
+
+  <script>
+    const wheel = document.getElementById('wheel');
+    const popupBox = document.getElementById('popupBox');
+    const spinBtn = document.getElementById('spinBtn');
+
+    const questions = [
+      { q: "Q1: What is a mathematician's favorite type of tree?", a: "A: A 'Geome-tree'!" },
+      { q: "Q2: What is the exact length of OQGN gas pipeline network?", a: "A: Over 4,000 kilometers." },
+      { q: "Q3: What is the capital of Canada?", a: "A: Ottawa" },
+      { q: "Q4: What kind of building has the most stories?", a: "A: A library!" },
+      { q: "Q5: In how many geographic areas (regions) does OQGN conduct its operations?", a: "A: Four main regions." },
+      { q: "Q6: Where did Oman's oil industry begin with the first successful exploration Oil Well?", a: "A: In Fahud, Oman." }
+    ];
+
+    let currentRotation = 0;
+    let selectedQA = null;
+
+    function spinWheel() {
+      spinBtn.disabled = true;
+      popupBox.classList.remove("show");
+      popupBox.innerHTML = "";
+
+      const spins = Math.floor(Math.random() * 5) + 5;
+      const angle = Math.floor(Math.random() * 360);
+      const totalRotation = spins * 360 + angle;
+      currentRotation += totalRotation;
+
+      wheel.style.transition = "transform 4s cubic-bezier(0.33, 1, 0.68, 1)";
+      wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+      const segmentAngle = 360 / questions.length;
+      const finalAngle = (360 - (currentRotation % 360)) % 360;
+      const selectedIndex = Math.floor(finalAngle / segmentAngle);
+      selectedQA = questions[selectedIndex];
+
+      setTimeout(() => {
+        popupBox.innerHTML = `<strong>${selectedQA.q}</strong><br><br><button class='button' onclick='showAnswer()'>Show Answer</button>`;
+        popupBox.classList.add("show");
+      }, 4000);
+    }
+
+    function showAnswer() {
+      if (selectedQA) {
+        popupBox.innerHTML += `<br><br>${selectedQA.a}`;
+      }
+    }
+
+    function resetWheel() {
+      currentRotation = 0;
+      wheel.style.transition = "none";
+      wheel.style.transform = `rotate(0deg)`;
+      popupBox.classList.remove("show");
+      popupBox.innerHTML = "";
+      spinBtn.disabled = false;
+    }
+  </script>
+</body>
+</html>
