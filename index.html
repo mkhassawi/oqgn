@@ -3,59 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Magic Wheel Pro</title>
+  <title>Magic Wheel</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
+      padding: 10px 0 0;
       background-color: #000;
       font-family: 'Segoe UI', sans-serif;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
     }
 
     h1 {
       color: #F58220;
-      margin-bottom: 20px;
+      margin: 10px 0 20px;
       font-size: 32px;
+      animation: fadeInSlide 1s ease-out forwards;
       opacity: 0;
-      transform: translateY(-20px);
-      animation: fadeIn 1s ease-out forwards;
     }
 
-    @keyframes fadeIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    @keyframes fadeInSlide {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
-    .button {
-      margin: 15px 0;
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #fff;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .button:disabled {
-      background-color: #666;
-      cursor: not-allowed;
+    .top-buttons {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
     }
 
     .wheel-container {
       position: relative;
       width: 350px;
       height: 350px;
-      margin: 15px 0;
+      margin-top: 30px;
+      margin-bottom: 20px;
     }
 
     .pointer {
@@ -69,13 +53,13 @@
       left: 50%;
       transform: translateX(-50%);
       z-index: 10;
-      animation: pulse 1.5s infinite;
+      box-shadow: 0 0 10px #F58220, 0 0 20px #F58220, 0 0 30px #F58220;
+      animation: glowPulse 1.5s infinite alternate;
     }
 
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0px #F58220; }
-      50% { box-shadow: 0 0 20px #F58220; }
-      100% { box-shadow: 0 0 0px #F58220; }
+    @keyframes glowPulse {
+      from { box-shadow: 0 0 10px #F58220; }
+      to { box-shadow: 0 0 30px #F58220; }
     }
 
     .wheel {
@@ -115,32 +99,41 @@
     .segment-label:nth-child(5) { transform: rotate(270deg) translate(0, -140px); }
     .segment-label:nth-child(6) { transform: rotate(330deg) translate(0, -140px); }
 
+    .button {
+      margin: 10px 0;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
     .popup {
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%) scale(0.8);
+      transform: translate(-50%, -50%);
       background: #222;
       color: #fff;
-      padding: 20px 30px;
-      border: 2px solid #F58220;
-      border-radius: 12px;
-      z-index: 10000;
+      padding: 20px;
+      border-radius: 10px;
       text-align: center;
-      opacity: 0;
-      transition: all 0.5s ease;
-      max-width: 90%;
+      display: none;
     }
 
     .popup.show {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1);
+      display: block;
     }
   </style>
 </head>
 <body>
-  <h1>Spin the Magic Wheel</h1>
-  <button class="button" id="spinBtn" onclick="spinWheel()">Spin the Wheel</button>
+  <h1>Spin the Wheel</h1>
+  <div class="top-buttons">
+    <button class="button" id="spinBtn" onclick="spinWheel()">Spin the Wheel</button>
+    <button class="button" onclick="resetWheel()">Reset</button>
+  </div>
 
   <div class="wheel-container">
     <div class="pointer"></div>
@@ -154,7 +147,6 @@
     </div>
   </div>
 
-  <button class="button" onclick="resetWheel()">Reset</button>
   <div class="popup" id="popupBox"></div>
 
   <script>
@@ -172,7 +164,7 @@
     ];
 
     let currentRotation = 0;
-    let selectedQA = null;
+    let currentAnswer = "";
 
     function spinWheel() {
       spinBtn.disabled = true;
@@ -184,30 +176,30 @@
       const totalRotation = spins * 360 + angle;
       currentRotation += totalRotation;
 
-      wheel.style.transition = "transform 4s cubic-bezier(0.33, 1, 0.68, 1)";
       wheel.style.transform = `rotate(${currentRotation}deg)`;
 
       const segmentAngle = 360 / questions.length;
       const finalAngle = (360 - (currentRotation % 360)) % 360;
       const selectedIndex = Math.floor(finalAngle / segmentAngle);
-      selectedQA = questions[selectedIndex];
+      currentAnswer = questions[selectedIndex].a;
 
       setTimeout(() => {
-        popupBox.innerHTML = `<strong>${selectedQA.q}</strong><br><br><button class='button' onclick='showAnswer()'>Show Answer</button>`;
+        popupBox.innerHTML = `${questions[selectedIndex].q}<br><br><button class='button' onclick='showAnswer()'>Answer</button>`;
         popupBox.classList.add("show");
       }, 4000);
     }
 
     function showAnswer() {
-      if (selectedQA) {
-        popupBox.innerHTML += `<br><br>${selectedQA.a}`;
-      }
+      popupBox.innerHTML += `<br><br>${currentAnswer}`;
     }
 
     function resetWheel() {
       currentRotation = 0;
       wheel.style.transition = "none";
       wheel.style.transform = `rotate(0deg)`;
+      setTimeout(() => {
+        wheel.style.transition = "transform 4s cubic-bezier(0.33, 1, 0.68, 1)";
+      }, 50);
       popupBox.classList.remove("show");
       popupBox.innerHTML = "";
       spinBtn.disabled = false;
