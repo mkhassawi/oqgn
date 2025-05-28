@@ -20,8 +20,8 @@
 
     h1 {
       color: #F58220;
-      margin-bottom: 60px;
-      font-size: 40px;
+      margin-bottom: 20px;
+      font-size: 32px;
       opacity: 0;
       transform: translateY(-20px);
       animation: fadeIn 1s ease-out forwards;
@@ -32,6 +32,23 @@
         opacity: 1;
         transform: translateY(0);
       }
+    }
+
+    .button {
+      margin-bottom: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #fff;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .button:disabled {
+      background-color: #666;
+      cursor: not-allowed;
     }
 
     .wheel-container {
@@ -97,23 +114,6 @@
     .segment-label:nth-child(5) { transform: rotate(270deg) translate(0, -140px); }
     .segment-label:nth-child(6) { transform: rotate(330deg) translate(0, -140px); }
 
-    .button {
-      margin-top: 30px;
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #fff;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .button:disabled {
-      background-color: #666;
-      cursor: not-allowed;
-    }
-
     .popup {
       position: fixed;
       top: 50%;
@@ -139,6 +139,7 @@
 </head>
 <body>
   <h1>Spin the Magic Wheel</h1>
+  <button class="button" id="spinBtn" onclick="spinWheel()">Spin the Wheel</button>
 
   <div class="wheel-container">
     <div class="pointer"></div>
@@ -152,7 +153,6 @@
     </div>
   </div>
 
-  <button class="button" id="spinBtn" onclick="spinWheel()">Spin the Wheel</button>
   <button class="button" onclick="resetWheel()">Reset</button>
   <div class="popup" id="popupBox"></div>
 
@@ -174,15 +174,6 @@
     let selectedQA = null;
 
     function spinWheel() {
-      const el = document.documentElement;
-      if (el.requestFullscreen) {
-        el.requestFullscreen();
-      } else if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
-      } else if (el.msRequestFullscreen) {
-        el.msRequestFullscreen();
-      }
-
       spinBtn.disabled = true;
       popupBox.classList.remove("show");
       popupBox.innerHTML = "";
